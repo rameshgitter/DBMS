@@ -1,0 +1,324 @@
+Name: Ramesh Chandra Soren   Enrollment No: 2022CSB086 
+
+----------------------------------------------------------------------------------
+mysql> -- Assignment 1
+
+mysql> -- Try inserting records which violates the constraints
+mysql> INSERT INTO students(rollno,name,bdate,deptcode,hostel,parent_inc)
+    -> VALUES (2022044,'John Doe','01-JAN-98','CST',1,500000);
+ERROR 1292 (22007): Incorrect date value: '01-JAN-98' for column 'bdate' at row 1
+
+mysql> --Delete Records from depts Table
+mysql> DELETE FROM depts WHERE deptcode = 'CSE';
+
+mysql> -- Find out the courses offered by the faculty dbp and nls
+mysql> SELECT * FROM crs_offrd WHERE crs_fac_cd IN ('2qpvki7', 'ulmipxv');
++----------+------------------+-------------+------------+
+| crs_code | crs_name         | crs_credits | crs_fac_cd |
++----------+------------------+-------------+------------+
+| C3102    | DBMS             |         3.0 | 2qpvki7    |
+| C3104    | Graph Algorithms |         3.0 | ulmipxv    |
++----------+------------------+-------------+------------+
+2 rows in set (0.00 sec)
+
+mysql> -- Find out the courses with full details offered by dbp
+mysql> SELECT * FROM crs_offrd WHERE crs_fac_cd = '2qpvki7';
++----------+----------+-------------+------------+
+| crs_code | crs_name | crs_credits | crs_fac_cd |
++----------+----------+-------------+------------+
+| C3102    | DBMS     |         3.0 | 2qpvki7    |
++----------+----------+-------------+------------+
+1 row in set (0.00 sec)
+
+mysql> -- Get the courses the credits of which lie between 4.0 and 6.0
+mysql> SELECT * FROM crs_offrd WHERE crs_credits BETWEEN 4.0 AND 6.0;
++----------+---------------------------+-------------+------------+
+| crs_code | crs_name                  | crs_credits | crs_fac_cd |
++----------+---------------------------+-------------+------------+
+| C3105    | Software Engg             |         4.0 | erssytr6   |
+| EE101    | Intro to Electrical Engg. |         4.0 | eqi82n9n   |
+| PH106    | Physics                   |         4.0 | takptai2   |
++----------+---------------------------+-------------+------------+
+3 rows in set (0.00 sec)
+
+mysql> -- Get the courses the credits of which are > 6.5
+mysql> SELECT * FROM crs_offrd WHERE crs_credits > 6.5;
++----------+-------------+-------------+------------+
+| crs_code | crs_name    | crs_credits | crs_fac_cd |
++----------+-------------+-------------+------------+
+| CS101    | Intro to CS |         7.0 | FAC12345   |
++----------+-------------+-------------+------------+
+1 row in set (0.00 sec)
+
+
+------------------------------------------------------------------------------------
+
+mysql> -- Assignment 2
+
+mysql> -- Count the number of students in CSE dept
+mysql> SELECT COUNT(*) FROM students WHERE deptcode='CST';
++----------+
+| COUNT(*) |
++----------+
+|        9 |
++----------+
+1 row in set (0.02 sec)
+
+mysql> -- Determine the minimum, maximum and average marks of each course
+mysql> SELECT crs_cd , MIN(marks),MAX(marks),AVG(marks)
+    -> FROM crs_regd
+    -> GROUP BY crs_cd;
++--------+------------+------------+------------+
+| crs_cd | MIN(marks) | MAX(marks) | AVG(marks) |
++--------+------------+------------+------------+
+| C3104  |      70.00 |      90.00 |  83.833333 |
+| CS101  |      70.00 |      93.00 |  81.000000 |
+| C3103  |      70.00 |      98.00 |  84.750000 |
+| C1302  |      95.00 |      95.00 |  95.000000 |
+| C3105  |      78.00 |      78.00 |  78.000000 |
+| C3123  |      70.00 |      98.00 |  81.000000 |
+| CH103  |      80.00 |      97.00 |  88.500000 |
+| PH106  |      60.00 |      87.00 |  73.333333 |
+| C3102  |      48.00 |      90.00 |  71.500000 |
+| EE101  |      89.00 |      94.00 |  91.500000 |
++--------+------------+------------+------------+
+10 rows in set (0.02 sec)
+
+mysql> -- Determine the total credits of the courses registered by a student
+mysql> SELECT crs_rollno,SUM(crs_credits)
+    -> FROM crs_regd
+    -> JOIN crs_offrd ON crs_regd.crs_cd = crs_offrd.crs_code
+    -> GROUP BY crs_rollno;
++------------+------------------+
+| crs_rollno | SUM(crs_credits) |
++------------+------------------+
+|    2022077 |              3.0 |
+|    2022078 |              7.0 |
+|    2022079 |              3.0 |
+|    2022083 |             20.0 |
+|    2022084 |             13.0 |
+|    2022085 |             26.0 |
+|    2022086 |              9.0 |
+|    2022089 |             20.0 |
+|    2022106 |             11.0 |
+|    2022109 |             18.0 |
++------------+------------------+
+10 rows in set (0.02 sec)
+
+mysql> -- Count the number of students in each hostel whose department is CSE
+mysql> SELECT hostel , COUNT(*)
+    -> from students
+    -> WHERE deptcode='CST'
+    -> GROUP BY hostel;
++--------+----------+
+| hostel | COUNT(*) |
++--------+----------+
+|      5 |        3 |
+|      1 |        2 |
+|      6 |        3 |
+|      9 |        1 |
++--------+----------+
+4 rows in set (0.00 sec)
+
+mysql> -- Display the hostel, rollno, parent_inc of the student who has the max(parent_inc) in a hostel
+mysql> SELECT hostel, rollno, parent_inc
+    -> FROM students
+    -> WHERE (hostel,parent_inc) IN (
+    -> SELECT hostel , MAX(parent_inc)
+    -> FROM students
+    -> GROUP BY hostel);
++--------+---------+------------+
+| hostel | rollno  | parent_inc |
++--------+---------+------------+
+|      1 | 2022077 |  3000000.0 |
+|      5 | 2022078 |  1800000.0 |
+|      5 | 2022079 |  1800000.0 |
+|      6 | 2022083 |  1500000.0 |
+|      9 | 2022089 |   350000.0 |
+|      5 | 2022109 |  1800000.0 |
++--------+---------+------------+
+6 rows in set (0.02 sec)
+
+mysql> -- Display the name and parental income of each student greater than the parental income of some rollno 2022086
+mysql> SELECT name , parent_inc
+    -> FROM students
+    -> WHERE parent_inc > (SELECT parent_inc FROM students WHERE rollno = 2022086);
++---------------+------------+
+| name          | parent_inc |
++---------------+------------+
+| Krishna Mohan |  3000000.0 |
+| Piyush Kumar  |  1800000.0 |
+| Arpit Sharma  |  1800000.0 |
+| Swatika Kar   |  1500000.0 |
+| Piyush Raj    |  1800000.0 |
++---------------+------------+
+5 rows in set (0.00 sec)
+
+mysql> -- Find out marks of students who have marks more than rollno 2022086 for course CH103
+mysql> SELECT crs_rollno, crs_cd, marks
+    -> FROM crs_regd
+    -> WHERE crs_cd = 'CH103'
+    -> AND marks > (SELECT marks FROM crs_regd WHERE crs_rollno = 2022086 AND crs_cd = 'CH103')
+    -> UNION
+    -> -- Find out marks of students who have marks more than rollno 2022086 for course PH106
+    -> SELECT crs_rollno, crs_cd, marks
+    -> FROM crs_regd
+    -> WHERE crs_cd = 'PH106'
+    -> AND marks > (SELECT marks FROM crs_regd WHERE crs_rollno = 2022086 AND crs_cd = 'PH106');
++------------+--------+-------+
+| crs_rollno | crs_cd | marks |
++------------+--------+-------+
+|    2022083 | CH103  | 90.00 |
+|    2022085 | CH103  | 97.00 |
+|    2022106 | CH103  | 87.00 |
+|    2022109 | CH103  | 80.00 |
+|    2022083 | PH106  | 80.00 |
+|    2022085 | PH106  | 87.00 |
+|    2022106 | PH106  | 80.00 |
++------------+--------+-------+
+7 rows in set (0.00 sec)
+
+
+------------------------------------------------------------------------------------
+
+mysql> -- Assignment 3
+
+mysql> -- List students (rollno, name, deptcode) registered for course EE101
+mysql> SELECT students.rollno, students.name, students.deptcode
+    -> FROM students
+    -> JOIN crs_regd ON students.rollno = crs_regd.crs_rollno
+    -> WHERE crs_regd.crs_cd = 'EE101';
++---------+---------------+----------+
+| rollno  | name          | deptcode |
++---------+---------------+----------+
+| 2022106 | Utkarsh Kumar | EEB      |
+| 2022109 | Piyush Raj    | EEB      |
++---------+---------------+----------+
+2 rows in set (0.00 sec)
+
+mysql> -- List students (rollno, name) in EEB dept registered for course EE101
+mysql> SELECT students.rollno, students.name
+    -> FROM students
+    -> JOIN crs_regd ON students.rollno = crs_regd.crs_rollno
+    -> WHERE students.deptcode = 'EEB' AND crs_regd.crs_cd = 'EE101';
++---------+---------------+
+| rollno  | name          |
++---------+---------------+
+| 2022106 | Utkarsh Kumar |
+| 2022109 | Piyush Raj    |
++---------+---------------+
+2 rows in set (0.00 sec)
+
+mysql> -- List students (rollno, name) in EEB dept not registered for course EE101
+mysql> SELECT students.rollno, students.name
+    -> FROM students
+    -> WHERE students.deptcode = 'EEB' AND students.rollno NOT IN (
+    -> SELECT crs_rollno
+    -> FROM crs_regd
+    -> WHERE crs_cd = 'EE101');
++---------+--------------+
+| rollno  | name         |
++---------+--------------+
+| 2022078 | Piyush Kumar |
++---------+--------------+
+1 row in set (0.00 sec)
+
+mysql> -- List the names of the students who have registered for both the courses 'DBMS' and 'OS'
+mysql> SELECT name
+    -> FROM students
+    -> WHERE rollno IN (
+    ->     SELECT crs_rollno
+    ->     FROM crs_regd
+    ->     WHERE crs_cd = 'DBMS'
+    -> ) AND rollno IN (
+    ->     SELECT crs_rollno
+    ->     FROM crs_regd
+    ->     WHERE crs_cd = 'OS'
+    -> );
+Empty set (0.00 sec)
+
+mysql> -- Find the names of the faculty members who have offered either 'MIS' or 'Software Engg.'
+mysql> SELECT fac_name
+    -> FROM faculty
+    -> WHERE fac_code IN (
+    -> SELECT crs_fac_cd
+    -> FROM crs_offrd
+    -> WHERE crs_name IN ('MIS', 'Software Engg.'));
++-----------+
+| fac_name  |
++-----------+
+| Sipra Das |
++-----------+
+1 row in set (0.01 sec)
+
+mysql> -- Find the names of the faculty members who have offered 'MIS' but not offered 'Software Engg.'
+mysql> SELECT fac_name
+    -> FROM faculty
+    -> WHERE fac_code IN (
+    -> SELECT crs_fac_cd
+    -> FROM crs_offrd
+    -> WHERE crs_name = 'MIS'
+    -> ) AND fac_code NOT IN (
+    -> SELECT crs_fac_cd
+    -> FROM crs_offrd
+    -> WHERE crs_name = 'Software Engg.'
+    -> );
++-----------+
+| fac_name  |
++-----------+
+| Sipra Das |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> -- Find out the students in each hostel who are not registered for any course
+mysql> SELECT hostel, name
+    -> FROM students
+    -> WHERE rollno NOT IN (SELECT crs_rollno FROM crs_regd);
++--------+-------------+
+| hostel | name        |
++--------+-------------+
+|      5 | Aryan Yadav |
+|      6 | Roopa Moodu |
++--------+-------------+
+2 rows in set (0.00 sec)
+
+mysql> -- Select the students who are in ELE dept or who have registered for course CS101
+mysql> SELECT rollno, name
+    -> FROM students
+    -> WHERE deptcode = 'ELE' OR rollno IN (SELECT crs_rollno FROM crs_regd WHERE crs_cd = 'CS101');
++---------+--------------+
+| rollno  | name         |
++---------+--------------+
+| 2022078 | Piyush Kumar |
+| 2022085 | Noornawaz    |
+| 2022089 | Jitendra     |
+| 2022109 | Piyush Raj   |
++---------+--------------+
+4 rows in set (0.00 sec)
+
+mysql> -- Display the students who have registered to all the courses
+mysql> SELECT rollno, name
+    -> FROM students
+    -> WHERE rollno IN (
+    -> SELECT crs_rollno
+    -> FROM crs_regd
+    -> GROUP BY crs_rollno
+    -> HAVING COUNT(crs_cd) = (SELECT COUNT(*) FROM crs_offrd)
+    -> );
++---------+-----------+
+| rollno  | name      |
++---------+-----------+
+| 2022085 | Noornawaz |
++---------+-----------+
+1 row in set (0.00 sec)
+
+mysql> -- Give Grace Marks 5 in subject 'DBMS' to the students who have scored less than 50 in that subject
+mysql> UPDATE crs_regd
+    -> SET marks = marks + 5
+    -> WHERE crs_cd = 'C3102' AND marks < 50;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+
+
+
