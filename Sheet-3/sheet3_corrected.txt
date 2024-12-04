@@ -1,0 +1,60 @@
+Name- Ramesh Chnadra Soren          Enrollment No- 2022CSB086
+---------------------------------------------------------------------------
+
+mysql> CREATE VIEW cse_stud AS
+    -> SELECT rollno,name,deptcode,hostel
+    -> FROM students
+    -> WHERE deptcode = 'CST';
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> INSERT INTO cse_stud (rollno,name,deptcode,hostel)
+    -> VALUES (2022081, 'Adithyan','CST', 6);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from cse_students;
++---------+----------------------+----------+--------+
+| rollno  | name                 | deptcode | hostel |
++---------+----------------------+----------+--------+
+|    3002 | Sarah Thompson       | CST      |      1 |
+| 2022035 | Aryan Yadav          | CST      |      5 |
+| 2022050 | John Doe             | CST      |      6 |
+| 2022051 | Scarlet              | CST      |      7 |
+| 2022077 | Krishna Mohan        | CST      |      1 |
+| 2022079 | Arpit Sharma         | CST      |      5 |
+| 2022081 | Adithyan             | CST      |      6 |
+| 2022083 | Swatika Kar          | CST      |      6 |
+| 2022084 | Santosh Methre       | CST      |      6 |
+| 2022085 | Noornawaz            | CST      |      1 |
+| 2022086 | Ramesh Chandra Soren | CST      |      5 |
+| 2022087 | Roopa Moodu          | CST      |      6 |
+| 2022089 | Jitendra             | CST      |      9 |
++---------+----------------------+----------+--------+
+13 rows in set (0.00 sec)
+
+mysql> UPDATE cse_students
+    -> SET parent_inc = parent_inc + 5000
+    -> WHERE deptcode = 'CST';
+ERROR 1054 (42S22): Unknown column 'parent_inc' in 'field list'
+
+---------------------------------------------------------------------------
+
+mysql> select * from mec_stud;
++---------+-----------------+------------------------+------+
+| Roll-No | Name            | Department Name        | Age  |
++---------+-----------------+------------------------+------+
+|    3003 | Michael Chen    | Mechanical Engineering |   21 |
+|    3004 | Emily Rodriguez | Mechanical Engineering |   22 |
+|    3005 | Daniel Kim      | Mechanical Engineering |   23 |
+|    3006 | Laura Martinez  | Mechanical Engineering |   21 |
++---------+-----------------+------------------------+------+
+4 rows in set (0.00 sec)
+
+mysql> INSERT INTO mec_stud (Roll-No, Name, Department Name, Age)
+    -> VALUES (3000, 'Alexjander', 'Mechanical Engineering', 21);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '-No, Name, Department Name, Age)
+
+mysql> -- Shift a student (for a given Name) from Mechanical to Computer Science.
+
+
+
+

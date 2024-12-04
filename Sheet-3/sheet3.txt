@@ -1,0 +1,273 @@
+Name: Ramesh Chandra Soren   Enrollment No: 2022CSB086 
+
+----------------------------------------------------------------------------------------------------------
+mysql> -- Assignment 7
+
+mysql> -- Create a view of all students in dept CSE
+mysql> CREATE VIEW cse_students AS
+    -> SELECT rollno,name,deptcode,hostel
+    -> FROM students
+    -> WHERE deptcode = 'CST';
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT * from cse_students;
++---------+----------------------+----------+--------+
+| rollno  | name                 | deptcode | hostel |
++---------+----------------------+----------+--------+
+| 2022035 | Aryan Yadav          | CST      |      5 |
+| 2022077 | Krishna Mohan        | CST      |      1 |
+| 2022079 | Arpit Sharma         | CST      |      5 |
+| 2022083 | Swatika Kar          | CST      |      6 |
+| 2022084 | Santosh Methre       | CST      |      6 |
+| 2022085 | Noornawaz            | CST      |      1 |
+| 2022086 | Ramesh Chandra Soren | CST      |      5 |
+| 2022087 | Roopa Moodu          | CST      |      6 |
+| 2022089 | Jitendra             | CST      |      9 |
++---------+----------------------+----------+--------+
+9 rows in set (0.01 sec)
+
+mysql> -- Create a view named as cse_stud for ‘CSE’ dept students having attributes rollno, name, hostel
+mysql> CREATE VIEW cse_stud AS
+    -> SELECT rollno, name, hostel
+    -> FROM students
+    -> WHERE deptcode = 'CST';
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> SELECT * FROM cse_stud;
++---------+----------------------+--------+
+| rollno  | name                 | hostel |
++---------+----------------------+--------+
+| 2022035 | Aryan Yadav          |      5 |
+| 2022077 | Krishna Mohan        |      1 |
+| 2022079 | Arpit Sharma         |      5 |
+| 2022083 | Swatika Kar          |      6 |
+| 2022084 | Santosh Methre       |      6 |
+| 2022085 | Noornawaz            |      1 |
+| 2022086 | Ramesh Chandra Soren |      5 |
+| 2022087 | Roopa Moodu          |      6 |
+| 2022089 | Jitendra             |      9 |
++---------+----------------------+--------+
+9 rows in set (0.00 sec)
+
+mysql> -- Insert a new student of CSE. Analyse the result
+mysql> INSERT INTO students (rollno, name, bdate, deptcode, hostel, parent_inc)
+    -> VALUES (2022050, 'John Doe', '1996-07-23' ,'CST', 6 , 4000000);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> -- Analyse the result:
+mysql> -- Since views do not store data independently, the actual data insertion happens in the `students` table.
+mysql> -- If view is updatable, the newly inserted sttudent should be reflected in the view `cse_students` or `cse_stud`.
+mysql> SELECT * FROM cse_students;
++---------+----------------------+----------+--------+
+| rollno  | name                 | deptcode | hostel |
++---------+----------------------+----------+--------+
+| 2022035 | Aryan Yadav          | CST      |      5 |
+| 2022050 | John Doe             | CST      |      6 |
+| 2022077 | Krishna Mohan        | CST      |      1 |
+| 2022079 | Arpit Sharma         | CST      |      5 |
+| 2022083 | Swatika Kar          | CST      |      6 |
+| 2022084 | Santosh Methre       | CST      |      6 |
+| 2022085 | Noornawaz            | CST      |      1 |
+| 2022086 | Ramesh Chandra Soren | CST      |      5 |
+| 2022087 | Roopa Moodu          | CST      |      6 |
+| 2022089 | Jitendra             | CST      |      9 |
++---------+----------------------+----------+--------+
+10 rows in set (0.00 sec)
+
+mysql> SELECT * FROM cse_stud;
++---------+----------------------+--------+
+| rollno  | name                 | hostel |
++---------+----------------------+--------+
+| 2022035 | Aryan Yadav          |      5 |
+| 2022050 | John Doe             |      6 |
+| 2022077 | Krishna Mohan        |      1 |
+| 2022079 | Arpit Sharma         |      5 |
+| 2022083 | Swatika Kar          |      6 |
+| 2022084 | Santosh Methre       |      6 |
+| 2022085 | Noornawaz            |      1 |
+| 2022086 | Ramesh Chandra Soren |      5 |
+| 2022087 | Roopa Moodu          |      6 |
+| 2022089 | Jitendra             |      9 |
++---------+----------------------+--------+
+10 rows in set (0.00 sec)
+
+mysql> -- Increment parental income by Rs. 5000 (HRA)
+mysql> UPDATE students
+    -> SET parent_inc = parent_inc + 5000
+    -> WHERE deptcode = 'CST';
+Query OK, 10 rows affected (0.02 sec)
+Rows matched: 10  Changed: 10  Warnings: 0
+
+mysql> -- Analyse:
+mysql> -- This update will affect all CSE students, increasing their parent income by 5000.
+mysql> -- This will change the main table but nothing will be known to us just by looking at view
+
+mysql> SELECT * FROM students;
++---------+----------------------+------------+----------+--------+------------+
+| rollno  | name                 | bdate      | deptcode | hostel | parent_inc |
++---------+----------------------+------------+----------+--------+------------+
+| 2022004 | Sangita Pramanick    | 1996-05-10 | ARC      |      1 |    11000.0 |
+| 2022006 | Devyani Gupta        | 1996-11-23 | ARC      |      2 |     9000.0 |
+| 2022035 | Aryan Yadav          | 1996-07-15 | CST      |      5 |   185000.0 |
+| 2022050 | John Doe             | 1996-07-23 | CST      |      6 |  4005000.0 |
+| 2022077 | Krishna Mohan        | 1996-09-01 | CST      |      1 |  3005000.0 |
+| 2022078 | Piyush Kumar         | 1996-07-15 | EEB      |      5 |  1800000.0 |
+| 2022079 | Arpit Sharma         | 1996-05-28 | CST      |      5 |  1805000.0 |
+| 2022083 | Swatika Kar          | 1996-08-03 | CST      |      6 |  1505000.0 |
+| 2022084 | Santosh Methre       | 1996-05-06 | CST      |      6 |   355000.0 |
+| 2022085 | Noornawaz            | 1996-05-06 | CST      |      1 |   355000.0 |
+| 2022086 | Ramesh Chandra Soren | 1996-05-06 | CST      |      5 |   505000.0 |
+| 2022087 | Roopa Moodu          | 1996-05-14 | CST      |      6 |   185000.0 |
+| 2022089 | Jitendra             | 1996-05-06 | CST      |      9 |   355000.0 |
+| 2022106 | Utkarsh Kumar        | 1996-05-28 | EEB      |      5 |   180000.0 |
+| 2022109 | Piyush Raj           | 1996-07-17 | EEB      |      5 |  1800000.0 |
++---------+----------------------+------------+----------+--------+------------+
+15 rows in set (0.00 sec)
+
+mysql> -- Delete the view cse_stud
+mysql> DROP VIEW cse_stud;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> -- Analyse:
+mysql> -- The view will be removed, but the actual data in the `students` table will remain unaffected.
+mysql> SELECT * FROM cse_stud;
+ERROR 1146 (42S02): Table 'sheet1.cse_stud' doesn't exist
+
+----------------------------------------------------------------------------------------------------------------
+
+mysql> -- Inserting new data for mechanical students
+mysql> INSERT INTO students (rollno, name, bdate, deptcode, hostel, parent_inc) VALUES
+    -> (3001, 'Alex Johnson', '2002-05-15', 'MEC', 2, 75000.0),
+    -> (3002, 'Sarah Thompson', '2001-11-22', 'MEC', 1, 82000.0),
+    -> (3003, 'Michael Chen', '2003-02-08', 'MEC', 3, 68000.0),
+    -> (3004, 'Emily Rodriguez', '2002-09-30', 'MEC', 2, 79000.0),
+    -> (3005, 'Daniel Kim', '2001-07-17', 'MEC', 1, 88000.0);
+Query OK, 5 rows affected (0.02 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+-----------------------------------------------------------------------------------------------------------------
+
+mysql> -- Create another view of all students in dept Mechanical Engineering (department Name).
+mysql> -- The view will contain attributes namely Roll-No, Name, Department Name, Age.
+mysql> CREATE VIEW mec_stud AS
+    -> SELECT 
+    ->     rollno AS "Roll-No", 
+    ->     name AS "Name", 
+    ->     'Mechanical Engineering' AS "Department Name",
+    ->     YEAR(CURDATE()) - YEAR(bdate) AS "Age"
+    -> FROM students
+    -> WHERE deptcode = 'MEC';
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> -- Insert a new Mechanical Engineering student
+mysql> SELECT * FROM mec_stud;
++---------+-----------------+------------------------+------+
+| Roll-No | Name            | Department Name        | Age  |
++---------+-----------------+------------------------+------+
+|    3001 | Alex Johnson    | Mechanical Engineering |   22 |
+|    3002 | Sarah Thompson  | Mechanical Engineering |   23 |
+|    3003 | Michael Chen    | Mechanical Engineering |   21 |
+|    3004 | Emily Rodriguez | Mechanical Engineering |   22 |
+|    3005 | Daniel Kim      | Mechanical Engineering |   23 |
++---------+-----------------+------------------------+------+
+5 rows in set (0.00 sec)
+
+mysql> INSERT INTO students (rollno, name, bdate, deptcode, hostel, parent_inc)
+    -> VALUES (3006, 'Laura Martinez', '2003-04-12', 'MEC', 3, 72000.0);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> SELECT * FROM mec_stud;
++---------+-----------------+------------------------+------+
+| Roll-No | Name            | Department Name        | Age  |
++---------+-----------------+------------------------+------+
+|    3001 | Alex Johnson    | Mechanical Engineering |   22 |
+|    3002 | Sarah Thompson  | Mechanical Engineering |   23 |
+|    3003 | Michael Chen    | Mechanical Engineering |   21 |
+|    3004 | Emily Rodriguez | Mechanical Engineering |   22 |
+|    3005 | Daniel Kim      | Mechanical Engineering |   23 |
+|    3006 | Laura Martinez  | Mechanical Engineering |   21 |
++---------+-----------------+------------------------+------+
+6 rows in set (0.00 sec)
+
+mysql> -- Delete a Mechanical Engineering student
+mysql> DELETE FROM students
+    -> WHERE name = 'Alex Johnson' AND deptcode = 'MEC';
+Query OK, 1 row affected (0.02 sec)
+
+mysql> SELECT * FROM mec_stud;
++---------+-----------------+------------------------+------+
+| Roll-No | Name            | Department Name        | Age  |
++---------+-----------------+------------------------+------+
+|    3002 | Sarah Thompson  | Mechanical Engineering |   23 |
+|    3003 | Michael Chen    | Mechanical Engineering |   21 |
+|    3004 | Emily Rodriguez | Mechanical Engineering |   22 |
+|    3005 | Daniel Kim      | Mechanical Engineering |   23 |
+|    3006 | Laura Martinez  | Mechanical Engineering |   21 |
++---------+-----------------+------------------------+------+
+5 rows in set (0.00 sec)
+
+mysql> -- Shift a student (for a given Name) from Mechanical to Computer Science.
+mysql> UPDATE students
+    -> SET deptcode = 'CSE'
+    -> WHERE name = 'Sarah Thompson' AND deptcode = 'MEC';
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> SELECT * FROM students;
++---------+----------------------+------------+----------+--------+------------+
+| rollno  | name                 | bdate      | deptcode | hostel | parent_inc |
++---------+----------------------+------------+----------+--------+------------+
+|    3002 | Sarah Thompson       | 2001-11-22 | CST      |      1 |    82000.0 |
+|    3003 | Michael Chen         | 2003-02-08 | MEC      |      3 |    68000.0 |
+|    3004 | Emily Rodriguez      | 2002-09-30 | MEC      |      2 |    79000.0 |
+|    3005 | Daniel Kim           | 2001-07-17 | MEC      |      1 |    88000.0 |
+|    3006 | Laura Martinez       | 2003-04-12 | MEC      |      3 |    72000.0 |
+| 2022004 | Sangita Pramanick    | 1996-05-10 | ARC      |      1 |    11000.0 |
+| 2022006 | Devyani Gupta        | 1996-11-23 | ARC      |      2 |     9000.0 |
+| 2022035 | Aryan Yadav          | 1996-07-15 | CST      |      5 |   185000.0 |
+| 2022050 | John Doe             | 1996-07-23 | CST      |      6 |  4005000.0 |
+| 2022077 | Krishna Mohan        | 1996-09-01 | CST      |      1 |  3005000.0 |
+| 2022078 | Piyush Kumar         | 1996-07-15 | EEB      |      5 |  1800000.0 |
+| 2022079 | Arpit Sharma         | 1996-05-28 | CST      |      5 |  1805000.0 |
+| 2022083 | Swatika Kar          | 1996-08-03 | CST      |      6 |  1505000.0 |
+| 2022084 | Santosh Methre       | 1996-05-06 | CST      |      6 |   355000.0 |
+| 2022085 | Noornawaz            | 1996-05-06 | CST      |      1 |   355000.0 |
+| 2022086 | Ramesh Chandra Soren | 1996-05-06 | CST      |      5 |   505000.0 |
+| 2022087 | Roopa Moodu          | 1996-05-14 | CST      |      6 |   185000.0 |
+| 2022089 | Jitendra             | 1996-05-06 | CST      |      9 |   355000.0 |
+| 2022106 | Utkarsh Kumar        | 1996-05-28 | EEB      |      5 |   180000.0 |
+| 2022109 | Piyush Raj           | 1996-07-17 | EEB      |      5 |  1800000.0 |
++---------+----------------------+------------+----------+--------+------------+
+20 rows in set (0.00 sec)
+
+mysql> SELECT * FROM mec_stud;
++---------+-----------------+------------------------+------+
+| Roll-No | Name            | Department Name        | Age  |
++---------+-----------------+------------------------+------+
+|    3003 | Michael Chen    | Mechanical Engineering |   21 |
+|    3004 | Emily Rodriguez | Mechanical Engineering |   22 |
+|    3005 | Daniel Kim      | Mechanical Engineering |   23 |
+|    3006 | Laura Martinez  | Mechanical Engineering |   21 |
++---------+-----------------+------------------------+------+
+4 rows in set (0.00 sec)
+
+mysql> SELECT * FROM cse_students;
++---------+----------------------+----------+--------+
+| rollno  | name                 | deptcode | hostel |
++---------+----------------------+----------+--------+
+|    3002 | Sarah Thompson       | CST      |      1 |
+| 2022035 | Aryan Yadav          | CST      |      5 |
+| 2022050 | John Doe             | CST      |      6 |
+| 2022077 | Krishna Mohan        | CST      |      1 |
+| 2022079 | Arpit Sharma         | CST      |      5 |
+| 2022083 | Swatika Kar          | CST      |      6 |
+| 2022084 | Santosh Methre       | CST      |      6 |
+| 2022085 | Noornawaz            | CST      |      1 |
+| 2022086 | Ramesh Chandra Soren | CST      |      5 |
+| 2022087 | Roopa Moodu          | CST      |      6 |
+| 2022089 | Jitendra             | CST      |      9 |
++---------+----------------------+----------+--------+
+11 rows in set (0.00 sec)
+
+
+
