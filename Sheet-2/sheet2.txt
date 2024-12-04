@@ -1,0 +1,239 @@
+Name: Ramesh Chandra Soren      Enrollment no: 2022CSB086
+------------------------------------------------------------------------------------------------------
+mysql> -- Assignment 4
+
+mysql> -- Retrieve the name of the students whose name starts with ‘S’ and contains ‘r’ as the second last character.
+mysql> select name from students  where name like 'S%' and name like '%r_';
++----------------+
+| name           |
++----------------+
+| Santosh Methre |
++----------------+
+1 row in set (0.00 sec)
+
+mysql> -- Retrieve the name of the youngest student(s) from the ‘CST’ department along with the total marks obtained by him (them).
+mysql> SELECT s.name, SUM(r.marks) AS total_marks
+    -> FROM students s
+    -> JOIN crs_regd r ON s.rollno = r.crs_rollno
+    -> WHERE s.deptcode = 'CST'
+    -> AND s.bdate = (SELECT MIN(bdate) FROM students WHERE deptcode = 'CST')
+    -> GROUP BY s.name;
++----------------------+-------------+
+| name                 | total_marks |
++----------------------+-------------+
+| Santosh Methre       |      298.00 |
+| Noornawaz            |      904.00 |
+| Ramesh Chandra Soren |      347.00 |
+| Jitendra             |      331.00 |
++----------------------+-------------+
+4 rows in set (0.00 sec)
+
+
+mysql> -- Find the age of all the students.
+mysql> select name , year(curdate())-year(bdate) as age from students;
++----------------------+------+
+| name                 | age  |
++----------------------+------+
+| Aryan Yadav          |   28 |
+| Krishna Mohan        |   28 |
+| Piyush Kumar         |   28 |
+| Arpit Sharma         |   28 |
+| Swatika Kar          |   28 |
+| Santosh Methre       |   28 |
+| Noornawaz            |   28 |
+| Ramesh Chandra Soren |   28 |
+| Roopa Moodu          |   28 |
+| Jitendra             |   28 |
+| Utkarsh Kumar        |   28 |
+| Piyush Raj           |   28 |
++----------------------+------+
+12 rows in set (0.00 sec)
+
+-----------------------------------------------------------------------------------------------------------
+
+mysql> -- Assignment 5
+
+mysql> -- Retrieve the name of the student(s) who obtained the second highest marks in ‘DBMS’:
+mysql> SELECT name
+    -> FROM students
+    -> WHERE rollno = (
+    ->     SELECT crs_rollno
+    ->     FROM crs_regd
+    ->     WHERE crs_cd = 'C3102'
+    ->     ORDER BY marks DESC
+    ->     LIMIT 1 OFFSET 1
+    -> );
++----------------+
+| name           |
++----------------+
+| Santosh Methre |
++----------------+
+1 row in set (0.01 sec)
+
+mysql> -- Find out the differences between the highest and lowest marks obtained in each subject:
+mysql> SELECT crs_cd, MAX(marks) - MIN(marks) AS marks_difference
+    -> FROM crs_regd
+    -> GROUP BY crs_cd;
++--------+------------------+
+| crs_cd | marks_difference |
++--------+------------------+
+| C3104  |            20.00 |
+| CS101  |            23.00 |
+| C3103  |            28.00 |
+| C1302  |             0.00 |
+| C3105  |             5.00 |
+| C3123  |            28.00 |
+| CH103  |            30.00 |
+| PH106  |            27.00 |
+| C3102  |            37.00 |
+| C3124  |             0.00 |
+| EE101  |             5.00 |
++--------+------------------+
+11 rows in set (0.02 sec)
+
+mysql> -- Find the roll number of the students from each department who obtained the highest total marks in their own department:
+mysql> SELECT s.name
+    -> FROM students s
+    -> JOIN crs_regd r ON s.rollno = r.crs_rollno
+    -> JOIN crs_offrd c ON r.crs_cd = c.crs_code
+    -> JOIN faculty f ON c.crs_fac_cd = f.fac_code
+    -> GROUP BY s.name
+    -> HAVING COUNT(DISTINCT f.fac_dept) = (SELECT COUNT(DISTINCT fac_dept) FROM faculty);
++---------------+
+| name          |
++---------------+
+| Noornawaz     |
+| Piyush Raj    |
+| Utkarsh Kumar |
++---------------+
+3 rows in set (0.00 sec)
+
+mysql> -- Retrieve the name of the student(s) who is(are) studying under faculties only from their own department:
+mysql> SELECT s.name
+    -> FROM students s
+    -> WHERE NOT EXISTS (
+    ->     SELECT 1
+    ->     FROM crs_regd r
+    ->     JOIN crs_offrd c ON r.crs_cd = c.crs_code
+    ->     JOIN faculty f ON c.crs_fac_cd = f.fac_code
+    ->     WHERE s.rollno = r.crs_rollno AND s.deptcode <> f.fac_dept
+    -> );
++----------------------+
+| name                 |
++----------------------+
+| Aryan Yadav          |
+| Krishna Mohan        |
+| Arpit Sharma         |
+| Swatika Kar          |
+| Santosh Methre       |
+| Ramesh Chandra Soren |
+| Roopa Moodu          |
+| Jitendra             |
++----------------------+
+8 rows in set (0.00 sec)
+
+-----------------------------------------------------------------------------------------------------------
+
+mysql> -- Assignment 6
+
+--------------------------------------------------------------------------------
+mysql> INSERT INTO depts VALUES ('ARC', 'Architecture');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> -- Inserting data into students table for the 'ARCH' department
+mysql> INSERT INTO students (rollno, name, bdate, deptcode, hostel, parent_inc)
+    -> VALUES
+    -> ('2022004', 'Sangita Pramanick', '1996-05-10', 'ARC', 1, 11000),
+    -> ('2022006', 'Devyani Gupta', '1996-11-23', 'ARC', 2, 9000);
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO faculty VALUES ('ARCHF123', 'Arun Rouf', 'ARC');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO crs_offrd VALUES ('AR101', 'City Planning', 4, 'ARCHF123');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO crs_regd VALUES (2022004, 'AR101', 92.9) , (2022006, 'AR101' , 88);
+Query OK, 2 rows affected (0.02 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+---------------------------------------------------------------------------------
+
+mysql> -- Display the highest parent incomes, in descending order, for each department excluding ‘ARCH’ such that only those highest parent incomes will appear that are below 12,000:
+mysql> select deptcode,max(parent_inc)
+    -> from students
+    -> group by deptcode
+    -> having max(parent_inc)<120000
+    -> and deptcode!='ARCH'
+    -> order by max(parent_inc);
++----------+-----------------+
+| deptcode | max(parent_inc) |
++----------+-----------------+
+| ARC      |         11000.0 |
++----------+-----------------+
+1 row in set (0.01 sec)
+
+
+
+
+-----------------------------------------------
+mysql> select deptcode , parent_inc from students where deptcode!='ARC' and parent_inc<1200000 order by parent_inc desc ;
++----------+------------+
+| deptcode | parent_inc |
++----------+------------+
+| CST      |   500000.0 |
+| CST      |   350000.0 |
+| CST      |   350000.0 |
+| CST      |   350000.0 |
+| CST      |   180000.0 |
+| CST      |   180000.0 |
+| EEB      |   180000.0 |
++----------+------------+
+7 rows in set (0.00 sec)
+
+----------------------------------------------
+
+
+
+mysql> -- Retrieve the fifth highest parent income for hostel number 5:
+mysql> select name,hostel,parent_inc
+    -> from students 
+    -> where hostel=5
+    -> order by parent_inc desc 
+    -> limit 1
+    -> OFFSET 4
+    -> ;
++-------------+--------+------------+
+| name        | hostel | parent_inc |
++-------------+--------+------------+
+| Aryan Yadav |      5 |   180000.0 |
++-------------+--------+------------+
+1 row in set (0.00 sec)
+
+
+mysql> -- Find the roll number of the students from each department who obtained the highest total marks in their own department:
+mysql> SELECT s.rollno, s.deptcode, SUM(r.marks) AS total_marks
+    -> FROM students s
+    -> JOIN crs_regd r ON s.rollno = r.crs_rollno
+    -> GROUP BY s.rollno, s.deptcode
+    -> HAVING SUM(r.marks) = (
+    -> SELECT MAX(total_marks)
+    -> FROM (
+    -> SELECT SUM(r2.marks) AS total_marks
+    -> FROM students s2
+    -> JOIN crs_regd r2 ON s2.rollno = r2.crs_rollno
+    -> WHERE s2.deptcode = s.deptcode
+    -> GROUP BY s2.rollno
+    -> ) AS dept_total_marks
+    -> );
++---------+----------+-------------+
+| rollno  | deptcode | total_marks |
++---------+----------+-------------+
+| 2022004 | ARC      |       92.90 |
+| 2022085 | CST      |      904.00 |
+| 2022109 | EEB      |      320.00 |
++---------+----------+-------------+
+3 rows in set (0.02 sec)
+
+
