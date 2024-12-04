@@ -1,0 +1,242 @@
+Name: Ramesh Chandra Soren                  Enrollment no: 2022CSB086
+------------------------------------------------------------------------------------------------
+
+mysql> -- Creating the Customer table
+mysql> CREATE TABLE Customer (
+    -> cust_id INT CHECK (cust_id BETWEEN 100 AND 10000) PRIMARY KEY,
+    -> cust_name VARCHAR(100),
+    -> annual_revenue DECIMAL(15, 2),
+    -> cust_type ENUM('MANUFACTURER', 'WHOLESALER', 'RETAILER')
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> -- Creating the Truck table
+mysql> CREATE TABLE Truck (
+    -> truck_no VARCHAR(50) PRIMARY KEY,
+    -> driver_name VARCHAR(100)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> -- Creating the City table
+mysql> CREATE TABLE City (
+    -> city_name VARCHAR(100) PRIMARY KEY,
+    -> population INT
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> -- Creating the Shipment table
+mysql> CREATE TABLE Shipment (
+    -> shipment_no INT PRIMARY KEY,
+    -> cust_id INT,
+    -> weight DECIMAL(10, 2) CHECK (weight < 1000),
+    -> truck_no VARCHAR(50),
+    -> destination VARCHAR(100),
+    -> ship_date DATE,
+    -> FOREIGN KEY (cust_id) REFERENCES Customer(cust_id) ON DELETE CASCADE,
+    -> FOREIGN KEY (truck_no) REFERENCES Truck(truck_no) ON DELETE SET NULL,
+    -> FOREIGN KEY (destination) REFERENCES City(city_name)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+----------------------------------------------------------------------------------------------------
+
+mysql> show tables;
++-----------------------+
+| Tables_in_assignment8 |
++-----------------------+
+| City                  |
+| Customer              |
+| Shipment              |
+| Truck                 |
++-----------------------+
+4 rows in set (0.00 sec)
+
+mysql> describe City;
++------------+--------------+------+-----+---------+-------+
+| Field      | Type         | Null | Key | Default | Extra |
++------------+--------------+------+-----+---------+-------+
+| city_name  | varchar(100) | NO   | PRI | NULL    |       |
+| population | int          | YES  |     | NULL    |       |
++------------+--------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> describe Customer;
++----------------+----------------------------------------------+------+-----+---------+-------+
+| Field          | Type                                         | Null | Key | Default | Extra |
++----------------+----------------------------------------------+------+-----+---------+-------+
+| cust_id        | int                                          | NO   | PRI | NULL    |       |
+| cust_name      | varchar(100)                                 | YES  |     | NULL    |       |
+| annual_revenue | decimal(15,2)                                | YES  |     | NULL    |       |
+| cust_type      | enum('MANUFACTURER','WHOLESALER','RETAILER') | YES  |     | NULL    |       |
++----------------+----------------------------------------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> describe Shipment;
++-------------+---------------+------+-----+---------+-------+
+| Field       | Type          | Null | Key | Default | Extra |
++-------------+---------------+------+-----+---------+-------+
+| shipment_no | int           | NO   | PRI | NULL    |       |
+| cust_id     | int           | YES  | MUL | NULL    |       |
+| weight      | decimal(10,2) | YES  |     | NULL    |       |
+| truck_no    | varchar(50)   | YES  | MUL | NULL    |       |
+| destination | varchar(100)  | YES  | MUL | NULL    |       |
+| ship_date   | date          | YES  |     | NULL    |       |
++-------------+---------------+------+-----+---------+-------+
+6 rows in set (0.01 sec)
+
+mysql> describe Truck;
++-------------+--------------+------+-----+---------+-------+
+| Field       | Type         | Null | Key | Default | Extra |
++-------------+--------------+------+-----+---------+-------+
+| truck_no    | varchar(50)  | NO   | PRI | NULL    |       |
+| driver_name | varchar(100) | YES  |     | NULL    |       |
++-------------+--------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+-----------------------------------------------------------------------------------------------------
+
+mysql> SELECT DISTINCT c.cust_name
+    -> FROM Customer c
+    -> JOIN Shipment s ON c.cust_id = s.cust_id
+    -> WHERE s.destination IN ('Kolkata', 'Chennai', 'Mumbai')
+    -> GROUP BY c.cust_name
+    -> HAVING COUNT(DISTINCT s.destination) = 3;
++-----------+
+| cust_name |
++-----------+
+| ABC Corp  |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> -- List the names of the drivers who have delivered shipments weighing over 200 pounds
+mysql> SELECT DISTINCT t.driver_name
+    -> FROM Truck t
+    -> JOIN Shipment s ON t.truck_no = s.truck_no
+    -> WHERE s.weight > 200;
++--------------+
+| driver_name  |
++--------------+
+| John Doe     |
+| Jane Smith   |
+| IQBAL        |
+| Robert Brown |
++--------------+
+4 rows in set (0.00 sec)
+
+mysql> -- Retrieve the maximum and minimum weights of the shipments. Rename the output as Max_Weight and Min_Weight respectively
+mysql> SELECT MAX(weight) AS Max_Weight, MIN(weight) AS Min_Weight
+    -> FROM Shipment;
++------------+------------+
+| Max_Weight | Min_Weight |
++------------+------------+
+|     800.00 |     100.00 |
++------------+------------+
+1 row in set (0.00 sec)
+
+mysql> -- For each customer, what is the average weight of packages sent by the customer
+mysql> SELECT 
+    ->     c.cust_name AS Customer_Name, 
+    ->     AVG(s.weight) AS Average_Weight
+    -> FROM Customer c
+    -> JOIN Shipment s ON c.cust_id = s.cust_id
+    -> GROUP BY c.cust_name;
++---------------+----------------+
+| Customer_Name | Average_Weight |
++---------------+----------------+
+| ABC Corp      |     180.000000 |
+| XYZ Ltd       |     300.000000 |
+| RetailOne     |     383.333333 |
+| Global Inc    |     750.000000 |
++---------------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> -- List the names and populations of cities that have received a shipment weighing over 100 pounds
+mysql> SELECT DISTINCT ci.city_name, ci.population
+    -> FROM City ci
+    -> JOIN Shipment s ON ci.city_name = s.destination
+    -> WHERE s.weight > 100;
++-----------+------------+
+| city_name | population |
++-----------+------------+
+| Bangalore |    8440000 |
+| Chennai   |   11300000 |
+| Delhi     |   19800000 |
+| Kolkata   |   14900000 |
+| Mumbai    |   20400000 |
++-----------+------------+
+5 rows in set (0.00 sec)
+
+mysql> -- List cities that have received shipments from every customer
+mysql> SELECT ci.city_name
+    -> FROM City ci
+    -> JOIN Shipment s ON ci.city_name = s.destination
+    -> GROUP BY ci.city_name
+    -> HAVING COUNT(DISTINCT s.cust_id) = (SELECT COUNT(*) FROM Customer);
++-----------+
+| city_name |
++-----------+
+| Bangalore |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> -- For each city, what is the maximum weight of a package sent to that city
+mysql> SELECT s.destination AS city_name, MAX(s.weight) AS Max_Weight
+    -> FROM Shipment s
+    -> GROUP BY s.destination;
++-----------+------------+
+| city_name | Max_Weight |
++-----------+------------+
+| Bangalore |     700.00 |
+| Chennai   |     600.00 |
+| Delhi     |     800.00 |
+| Kolkata   |     500.00 |
+| Mumbai    |     400.00 |
++-----------+------------+
+5 rows in set (0.00 sec)
+
+mysql> -- List the name and annual revenue of customers whose shipments have been delivered by truck driver ‘IQBAL’ 
+mysql> SELECT DISTINCT c.cust_name, c.annual_revenue
+    -> FROM Customer c
+    -> JOIN Shipment s ON c.cust_id = s.cust_id
+    -> JOIN Truck t ON s.truck_no = t.truck_no
+    -> WHERE t.driver_name = 'IQBAL';
++-----------+----------------+
+| cust_name | annual_revenue |
++-----------+----------------+
+| RetailOne |      300000.00 |
++-----------+----------------+
+1 row in set (0.00 sec)
+
+mysql> -- List drivers who have delivered shipments to every city
+mysql> SELECT t.driver_name
+    -> FROM Truck t
+    -> JOIN Shipment s ON t.truck_no = s.truck_no
+    -> GROUP BY t.driver_name
+    -> HAVING COUNT(DISTINCT s.destination) = (SELECT COUNT(*) FROM City);
++-------------+
+| driver_name |
++-------------+
+| John Doe    |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> -- For each city, with a population over 1 million, what is the minimum weight of a package sent to that city
+mysql> SELECT ci.city_name, MIN(s.weight) AS Min_Weight
+    -> FROM City ci
+    -> JOIN Shipment s ON ci.city_name = s.destination
+    -> WHERE ci.population > 1000000
+    -> GROUP BY ci.city_name;
++-----------+------------+
+| city_name | Min_Weight |
++-----------+------------+
+| Bangalore |     150.00 |
+| Chennai   |     200.00 |
+| Delhi     |     200.00 |
+| Kolkata   |     150.00 |
+| Mumbai    |     100.00 |
++-----------+------------+
+5 rows in set (0.00 sec)
+
+
+
+

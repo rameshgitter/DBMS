@@ -1,0 +1,178 @@
+-- Creating the DEPT table
+CREATE TABLE DEPT (
+    DEPTNO CHAR(4) PRIMARY KEY CHECK (DEPTNO LIKE 'D%'),
+    DNAME ENUM('Accounting', 'Sales', 'Research', 'Operations'),
+    LOC VARCHAR(100)
+);
+
+
+-- Creating the EMP table
+CREATE TABLE EMP (
+    EMPNO INT PRIMARY KEY CHECK (EMPNO BETWEEN 7000 AND 8000),
+    ENAME VARCHAR(10),
+    JOB ENUM('Clerk', 'Salesman', 'Manager', 'Analyst', 'President'),
+    MGR INT,
+    HIREDATE DATE,
+    SAL DECIMAL(10, 2),
+    COMM DECIMAL(10, 2) DEFAULT 0 CHECK (COMM < 1500),
+    DEPTNO CHAR(4),
+    FOREIGN KEY (DEPTNO) REFERENCES DEPT(DEPTNO),
+    FOREIGN KEY (MGR) REFERENCES EMP(EMPNO)
+);
+--------------------------------------------------------------------------------------------------------------------
+
+mysql> describe DEPT;
++--------+----------------------------------------------------+------+-----+---------+-------+
+| Field  | Type                                               | Null | Key | Default | Extra |
++--------+----------------------------------------------------+------+-----+---------+-------+
+| DEPTNO | char(4)                                            | NO   | PRI | NULL    |       |
+| DNAME  | enum('Accounting','Sales','Research','Operations') | YES  |     | NULL    |       |
+| LOC    | varchar(100)                                       | YES  |     | NULL    |       |
++--------+----------------------------------------------------+------+-----+---------+-------+
+3 rows in set (0.02 sec)
+
+mysql> describe EMP;
++----------+----------------------------------------------------------+------+-----+---------+-------+
+| Field    | Type                                                     | Null | Key | Default | Extra |
++----------+----------------------------------------------------------+------+-----+---------+-------+
+| EMPNO    | int                                                      | NO   | PRI | NULL    |       |
+| ENAME    | varchar(10)                                              | YES  |     | NULL    |       |
+| JOB      | enum('Clerk','Salesman','Manager','Analyst','President') | YES  |     | NULL    |       |
+| MGR      | int                                                      | YES  | MUL | NULL    |       |
+| HIREDATE | date                                                     | YES  |     | NULL    |       |
+| SAL      | decimal(10,2)                                            | YES  |     | NULL    |       |
+| COMM     | decimal(10,2)                                            | YES  |     | 0.00    |       |
+| DEPTNO   | char(4)                                                  | YES  | MUL | NULL    |       |
++----------+----------------------------------------------------------+------+-----+---------+-------+
+8 rows in set (0.00 sec)
+
+--------------------------------------------------------------------------------------------------------------------
+
+-- Inserting values into DEPT table
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D1', 'Accounting', 'New York');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D2', 'Sales', 'Los Angeles');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D3', 'Research', 'Chicago');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D4', 'Operations', 'San Francisco');
+
+
+mysql> -- Corrected INSERT statement with shorter ENAME values
+mysql> INSERT INTO EMP (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO) VALUES
+    -> (7001, 'John Doe', 'Manager', NULL, '2018-01-10', 5000.00, 200.00, 'D1'), 
+    -> (7002, 'Jane Smith', 'Analyst', 7001, '2019-03-15', 4000.00, 150.00, 'D1'),
+    -> (7003, 'Jim Brown', 'Clerk', 7002, '2020-06-23', 2500.00, 0.00, 'D1'),
+    -> (7004, 'Alice J.', 'Salesman', 7001, '2021-07-30', 3000.00, 500.00, 'D2'),
+    -> (7005, 'Bob Davis', 'Clerk', NULL, '2020-09-12', 2200.00, 0.00, 'D2'),
+    -> (7006, 'Carol Lee', 'President', NULL, '2019-11-18', 6000.00, 1000.00, 'D3'),
+    -> (7007, 'David W.', 'Clerk', 7006, '2020-02-09', 2300.00, 100.00, 'D3'),
+    -> (7008, 'Emma M.', 'Manager', NULL, '2021-01-01', 4800.00, 200.00, 'D4');
+Query OK, 8 rows affected (0.02 sec)
+Records: 8  Duplicates: 0  Warnings: 0
+
+mysql> select * from EMP;
++-------+------------+-----------+------+------------+---------+---------+--------+
+| EMPNO | ENAME      | JOB       | MGR  | HIREDATE   | SAL     | COMM    | DEPTNO |
++-------+------------+-----------+------+------------+---------+---------+--------+
+|  7001 | John Doe   | Manager   | NULL | 2018-01-10 | 5000.00 |  200.00 | D1     |
+|  7002 | Jane Smith | Analyst   | 7001 | 2019-03-15 | 4000.00 |  150.00 | D1     |
+|  7003 | Jim Brown  | Clerk     | 7002 | 2020-06-23 | 2500.00 |    0.00 | D1     |
+|  7004 | Alice J.   | Salesman  | 7001 | 2021-07-30 | 3000.00 |  500.00 | D2     |
+|  7005 | Bob Davis  | Clerk     | NULL | 2020-09-12 | 2200.00 |    0.00 | D2     |
+|  7006 | Carol Lee  | President | NULL | 2019-11-18 | 6000.00 | 1000.00 | D3     |
+|  7007 | David W.   | Clerk     | 7006 | 2020-02-09 | 2300.00 |  100.00 | D3     |
+|  7008 | Emma M.    | Manager   | NULL | 2021-01-01 | 4800.00 |  200.00 | D4     |
++-------+------------+-----------+------+------------+---------+---------+--------+
+8 rows in set (0.00 sec)
+
+------------------------------------------------------------------------------------------------------------------------
+
+mysql> -- Display the difference between the highest and lowest salary of each department in descending order:
+mysql> SELECT 
+    ->     d.DNAME AS Department,
+    ->     MAX(e.SAL) - MIN(e.SAL) AS Difference
+    -> FROM EMP e
+    -> JOIN DEPT d ON e.DEPTNO = d.DEPTNO
+    -> GROUP BY d.DNAME
+    -> ORDER BY Difference DESC;
++------------+------------+
+| Department | Difference |
++------------+------------+
+| Research   |    3700.00 |
+| Accounting |    2500.00 |
+| Sales      |     800.00 |
+| Operations |       0.00 |
++------------+------------+
+4 rows in set (0.02 sec)
+
+
+mysql> -- List all employees’ employee numbers and names along with their immediate managers’ employee numbers and names:
+mysql> SELECT 
+    ->     e1.EMPNO AS Employee_ID,
+    ->     e1.ENAME AS Employee_Name,
+    ->     e2.EMPNO AS Manager_ID,
+    ->     e2.ENAME AS Manager_Name
+    -> FROM EMP e1
+    -> LEFT JOIN EMP e2 ON e1.MGR = e2.EMPNO;
++-------------+---------------+------------+--------------+
+| Employee_ID | Employee_Name | Manager_ID | Manager_Name |
++-------------+---------------+------------+--------------+
+|        7001 | John Doe      |       NULL | NULL         |
+|        7002 | Jane Smith    |       7001 | John Doe     |
+|        7003 | Jim Brown     |       7002 | Jane Smith   |
+|        7004 | Alice J.      |       7001 | John Doe     |
+|        7005 | Bob Davis     |       NULL | NULL         |
+|        7006 | Carol Lee     |       NULL | NULL         |
+|        7007 | David W.      |       7006 | Carol Lee    |
+|        7008 | Emma M.       |       NULL | NULL         |
++-------------+---------------+------------+--------------+
+8 rows in set (0.00 sec)
+
+
+mysql> -- Create a query to display the total number of employees and the total number of employees hired only in 2020:
+mysql> SELECT 
+    ->     COUNT(*) AS TOTAL,
+    ->     SUM(CASE WHEN YEAR(HIREDATE) = 2020 THEN 1 ELSE 0 END) AS TOTAL_2020
+    -> FROM EMP;
++-------+------------+
+| TOTAL | TOTAL_2020 |
++-------+------------+
+|     8 |          3 |
++-------+------------+
+1 row in set (0.00 sec)
+
+
+mysql> -- Display the manager number and the salary of the lowest-paid employee under that manager. Exclude any group where the minimum salary is less than 1000:
+mysql> SELECT 
+    ->     e1.MGR AS Manager_ID,
+    ->     MIN(e2.SAL) AS Lowest_Salary
+    -> FROM EMP e1
+    -> JOIN EMP e2 ON e1.EMPNO = e2.MGR
+    -> GROUP BY e1.MGR
+    -> HAVING MIN(e2.SAL) >= 1000
+    -> ORDER BY Lowest_Salary DESC;
++------------+---------------+
+| Manager_ID | Lowest_Salary |
++------------+---------------+
+|       7001 |       2500.00 |
+|       NULL |       2300.00 |
++------------+---------------+
+2 rows in set (0.00 sec)
+
+mysql> -- Display the department name, location name, number of employees, and average salary for all employees in that department, including departments with no employees:
+mysql> SELECT 
+    ->     d.DNAME AS DNAME,
+    ->     d.LOC AS LOCATION,
+    ->     COUNT(e.EMPNO) AS "NUMBER OF PEOPLE",
+    ->     COALESCE(ROUND(AVG(e.SAL), 2), 0) AS "AVERAGE SALARY"
+    -> FROM DEPT d
+    -> LEFT JOIN EMP e ON d.DEPTNO = e.DEPTNO
+    -> GROUP BY d.DNAME, d.LOC;
++------------+---------------+------------------+----------------+
+| DNAME      | LOCATION      | NUMBER OF PEOPLE | AVERAGE SALARY |
++------------+---------------+------------------+----------------+
+| Accounting | New York      |                3 |        3833.33 |
+| Sales      | Los Angeles   |                2 |        2600.00 |
+| Research   | Chicago       |                2 |        4150.00 |
+| Operations | San Francisco |                1 |        4800.00 |
++------------+---------------+------------------+----------------+
+4 rows in set (0.00 sec)
+
