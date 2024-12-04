@@ -1,0 +1,474 @@
+Name: Ramesh Chandra Soren          Enrollment No: 2022CSB086 
+-----------------------------------------------------------------------------------
+Theory:- 
+>> Insert statements create a table for circles and store radius and circumference.
+>> Update for customer balance is done via a cursor where the balance is checked for Rs.1000.
+>> Update salary of employees using a cursor and a percentage increase.
+>> Update for item stock is performed, inserting new items or updating existing balances.
+>> A Procedure is defined to raise employee salary with error handling for missing employees or NULL salary.
+>> The %TYPE attribute in PL/SQL is used to declare a variable with the same data type as a column in a database table or another previously defined variable.
+>> To Debug use SHOW ERRORS;
+
+Explanation of COMMIT
+
+    When you execute INSERT, UPDATE, or DELETE statements in a PL/SQL block, those changes are initially held in a temporary state and are not yet saved to the database.
+    COMMIT finalizes these changes, making them permanent and visible to other users.
+    Without a COMMIT, if the session ends or an error occurs, these changes are rolled back (canceled).
+
+Key Points about COMMIT
+
+    Once a COMMIT is executed, you cannot undo (or roll back) the changes.
+    COMMIT also releases any locks held on the affected rows or tables, allowing other users to access them.
+------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------
+mysql>> -- Insert data into a table containing two attributes namely radius & circumference of circles. You may get different values of radius either from keyboard or you may generate different values.
+
+pl/sql:___________________________________________________________________________
+
+----------------------------------------------------------------------------------
+CREATE TABLE circles (
+    radius NUMBER,
+    circumference NUMBER
+);
+
+DECLARE
+    r NUMBER;
+    c NUMBER;
+BEGIN
+    -- Insert data by manually generating values of radius or accepting input
+    r := 5; -- Example radius value, can also be input from user
+    c := 2 * 3.1416 * r;
+    INSERT INTO circles (radius, circumference) VALUES (r, c);
+    
+    r := 10; -- Another example radius value
+    c := 2 * 3.1416 * r;
+    INSERT INTO circles (radius, circumference) VALUES (r, c);
+    
+    COMMIT;
+END;
+/
+------------------------------------------------------------------------------------
+
+CREATE TABLE circles (
+   circle_id NUMBER PRIMARY KEY,
+   radius NUMBER
+);
+
+ALTER TABLE circles
+ADD (area NUMBER);
+
+DECLARE
+   v_circle_id NUMBER := 1;               -- starting ID
+   v_radius NUMBER;                       -- radius value to insert
+   v_area NUMBER;                         -- area value to calculate
+BEGIN
+   FOR i IN 1..5 LOOP                     -- Insert 5 sample entries
+      v_radius := DBMS_RANDOM.VALUE(1, 10);  -- Generates a random radius between 1 and 10
+      v_area := 3.14159 * v_radius * v_radius;  -- Calculate area as π * radius^2
+
+      INSERT INTO circles (circle_id, radius, area)
+      VALUES (v_circle_id, v_radius, v_area);
+
+      v_circle_id := v_circle_id + 1;     -- Increment the ID for the next entry
+   END LOOP;
+
+   COMMIT;
+END;
+/
+
+SELECT * FROM circles;
+
+
+output:_____________________________________________________________________________
+
+Part1:- Hard Coded the values
+SELECT * FROM circles;
+
+    RADIUS CIRCUMFERENCE
+---------- -------------
+	 5	  31.416
+	10	  62.832
+
+    RADIUS CIRCUMFERENCE
+---------- -------------
+	 5	  31.416
+	10	  62.832
+
+Part2:- Randomly generating radius
+ CIRCLE_ID     RADIUS	    AREA
+---------- ---------- ----------
+	 1 6.28268581 124.005283
+	 2 4.95651367 77.1795288
+	 3 6.40954448 129.063619
+	 4 2.47218192 19.2004036
+	 5 8.68150244 236.776877
+
+--------------------------------------------------------------------------------------
+
+
+mysql>> -- Update the balance of each customer from a cust_acct table showing withdrawal of Rs.1000/- as service charge provided that the customer balance shows at least Rs.1000/-.
+
+pl/sql:___________________________________________________________________________
+
+-- Creating the Customer table
+CREATE TABLE Customer (
+    cust_id INT CHECK (cust_id BETWEEN 100 AND 10000) PRIMARY KEY,
+    cust_name VARCHAR(100),
+    annual_revenue DECIMAL(15, 2),
+    cust_type VARCHAR2(20) CHECK (cust_type IN ('MANUFACTURER', 'WHOLESALER', 'RETAILER'))
+);
+
+
+CREATE TABLE cust_acct (
+    cust_id INT PRIMARY KEY,
+    balance DECIMAL(15, 2),
+    FOREIGN KEY (cust_id) REFERENCES Customer(cust_id)
+);
+
+-- Insert sample data into the Customer table
+INSERT INTO Customer (cust_id, cust_name, annual_revenue, cust_type) 
+VALUES (1001, 'John Doe', 500000.00, 'RETAILER');
+
+INSERT INTO Customer (cust_id, cust_name, annual_revenue, cust_type) 
+VALUES (1002, 'Jane Smith', 1000000.00, 'WHOLESALER');
+
+-- Insert sample data into the cust_acct table
+INSERT INTO cust_acct (cust_id, balance) 
+VALUES (1001, 1500.00);
+
+INSERT INTO cust_acct (cust_id, balance) 
+VALUES (1002, 2500.00);
+
+
+CREATE OR REPLACE PROCEDURE deduct_service_charge AS
+BEGIN
+    -- Update balances, deducting Rs. 1000 if balance is at least Rs. 1000
+    UPDATE cust_acct
+    SET balance = balance - 1000
+    WHERE balance >= 1000;
+
+    -- Optional: Output the number of rows affected
+    DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' customer(s) charged Rs. 1000 service fee.');
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Handle any exceptions (optional)
+        ROLLBACK; -- Rollback if necessary
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+END;
+/
+
+
+BEGIN
+    deduct_service_charge;
+END;
+/
+
+
+output:_____________________________________________________________________________
+
+Part1:- if no data is inserted
+0 customer(s) charged Rs. 1000 service fee.
+
+Part2:- for our current data
+2 customer(s) charged Rs. 1000 service fee.
+
+
+--------------------------------------------------------------------------------------
+
+mysql>> -- Update the salary of each employee from EMP table by 15% using cursor.
+
+-- Creating the DEPT table
+CREATE TABLE DEPT (
+    DEPTNO CHAR(4) PRIMARY KEY CHECK (DEPTNO LIKE 'D%'),
+    DNAME VARCHAR2(20) CHECK (DNAME IN ('Accounting', 'Sales', 'Research', 'Operations')),
+    LOC VARCHAR2(100)
+);
+
+-- Creating the EMP table
+CREATE TABLE EMP (
+    EMPNO INT PRIMARY KEY CHECK (EMPNO BETWEEN 7000 AND 8000),
+    ENAME VARCHAR(10),
+    JOB VARCHAR(10) CHECK (JOB IN ('Clerk', 'Salesman', 'Manager', 'Analyst', 'President')),
+    MGR INT,
+    HIREDATE DATE,
+    SAL DECIMAL(10, 2),
+    COMM DECIMAL(10, 2) DEFAULT 0 CHECK (COMM < 1500),
+    DEPTNO CHAR(4),
+    FOREIGN KEY (DEPTNO) REFERENCES DEPT(DEPTNO),
+    FOREIGN KEY (MGR) REFERENCES EMP(EMPNO)
+);
+
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D1', 'Accounting', 'New York');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D2', 'Sales', 'Los Angeles');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D3', 'Research', 'Chicago');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D4', 'Operations', 'San Francisco');
+
+-- Now insert values into EMP table
+INSERT INTO EMP (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO) VALUES
+(7001, 'John Doe', 'Manager', NULL, DATE '2018-01-10', 5000.00, 200.00, 'D1'), 
+(7002, 'Jane Smith', 'Analyst', 7001, DATE '2019-03-15', 4000.00, 150.00, 'D1'),
+(7003, 'Jim Brown', 'Clerk', 7002, DATE '2020-06-23', 2500.00, 0.00, 'D1'),
+(7004, 'Alice J.', 'Salesman', 7001, DATE '2021-07-30', 3000.00, 500.00, 'D2'),
+(7005, 'Bob Davis', 'Clerk', NULL, DATE '2020-09-12', 2200.00, 0.00, 'D2'),
+(7006, 'Carol Lee', 'President', NULL, DATE '2019-11-18', 6000.00, 1000.00, 'D3'),
+(7007, 'David W.', 'Clerk', 7006, DATE '2020-02-09', 2300.00, 100.00, 'D3'),
+(7008, 'Emma M.', 'Manager', NULL, DATE '2021-01-01', 4800.00, 200.00, 'D4');
+
+-- Before Update
+SELECT * FROM EMP;
+
+pl/sql:___________________________________________________________________________
+
+DECLARE
+    CURSOR emp_cursor IS
+        SELECT EMPNO, SAL FROM EMP;
+    
+    v_empno EMP.EMPNO%TYPE;
+    v_sal EMP.SAL%TYPE;
+BEGIN
+    FOR emp_record IN emp_cursor LOOP
+        v_empno := emp_record.EMPNO;
+        v_sal := emp_record.SAL;
+        
+        UPDATE EMP
+        SET SAL = v_sal * 1.15
+        WHERE EMPNO = v_empno;
+    END LOOP;
+    
+    COMMIT;
+    
+    DBMS_OUTPUT.PUT_LINE('Salaries updated successfully by 15%.');
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        DBMS_OUTPUT.PUT_LINE('Error occurred: ' || SQLERRM);
+END;
+
+
+-- After Update
+SELECT * FROM EMP;
+
+output:_____________________________________________________________________________
+
+     EMPNO ENAME      JOB		MGR HIREDATE	     SAL       COMM DEPT
+---------- ---------- ---------- ---------- --------- ---------- ---------- ----
+      7001 John Doe   Manager		    10-JAN-18	    5000	200 D1
+      7002 Jane Smith Analyst	       7001 15-MAR-19	    4000	150 D1
+      7003 Jim Brown  Clerk	       7002 23-JUN-20	    2500	  0 D1
+      7004 Alice J.   Salesman	       7001 30-JUL-21	    3000	500 D2
+      7005 Bob Davis  Clerk		    12-SEP-20	    2200	  0 D2
+      7006 Carol Lee  President 	    18-NOV-19	    6000       1000 D3
+      7007 David W.   Clerk	       7006 09-FEB-20	    2300	100 D3
+      7008 Emma M.    Manager		    01-JAN-21	    4800	200 D4
+Salaries updated successfully by 15%.
+
+     EMPNO ENAME      JOB		MGR HIREDATE	     SAL       COMM DEPT
+---------- ---------- ---------- ---------- --------- ---------- ---------- ----
+      7001 John Doe   Manager		    10-JAN-18	    5750	200 D1
+      7002 Jane Smith Analyst	       7001 15-MAR-19	    4600	150 D1
+      7003 Jim Brown  Clerk	       7002 23-JUN-20	    2875	  0 D1
+      7004 Alice J.   Salesman	       7001 30-JUL-21	    3450	500 D2
+      7005 Bob Davis  Clerk		    12-SEP-20	    2530	  0 D2
+      7006 Carol Lee  President 	    18-NOV-19	    6900       1000 D3
+      7007 David W.   Clerk	       7006 09-FEB-20	    2645	100 D3
+      7008 Emma M.    Manager		    01-JAN-21	    5520	200 D4
+
+
+-----------------------------------------------------------------------------------------
+
+mysql>> -- Update the balance in the ITEM_MSTR table each time a transaction takes place in the ITEM_TR table. 
+mysql>> -- If this item_id is already present in the ITEM_MSTR table an update is performed to decrease the balance by the quantity specified in the ITEM_TR table.
+mysql>> -- If the item_id is not present in the ITEM_MSTR table, the tuple is to be inserted.
+
+pl/sql:___________________________________________________________________________
+
+CREATE TABLE ITEM_MSTR (
+    item_id INT PRIMARY KEY,
+    balance INT
+);
+
+CREATE TABLE ITEM_TR (
+    item_id INT,
+    quantity INT
+);
+
+
+CREATE OR REPLACE TRIGGER update_item_balance
+AFTER INSERT ON ITEM_TR
+FOR EACH ROW
+DECLARE
+    v_current_balance ITEM_MSTR.balance%TYPE;
+BEGIN
+    -- Check if item_id exists in ITEM_MSTR
+    SELECT balance INTO v_current_balance
+    FROM ITEM_MSTR
+    WHERE item_id = :NEW.item_id;
+
+    -- If item exists, update the balance
+    UPDATE ITEM_MSTR
+    SET balance = balance - :NEW.quantity
+    WHERE item_id = :NEW.item_id;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- If item does not exist, insert it with the negative quantity as the balance
+        INSERT INTO ITEM_MSTR (item_id, balance) 
+        VALUES (:NEW.item_id, -:NEW.quantity);
+END;
+/
+
+
+INSERT INTO ITEM_TR (item_id, quantity) VALUES (101, 50);
+
+SELECT * FROM ITEM_MSTR WHERE item_id = 101;
+
+
+output:_____________________________________________________________________________
+
+   ITEM_ID    BALANCE
+---------- ----------
+       101	  -50
+
+------------------------------------------------------------------------------------------------
+
+mysql>> -- Write a PROCEDURE for raising salary of some employee by some amount. The PROCEDURE to be written may carry two parameters emp_id and amt to be raised. 
+mysql>> -- Include two exceptions which will be raised when either emp_id is not present or salary is NULL.
+
+pl/sql:___________________________________________________________________________
+
+-- Creating the DEPT table
+CREATE TABLE DEPT (
+    DEPTNO CHAR(4) PRIMARY KEY CHECK (DEPTNO LIKE 'D%'),
+    DNAME VARCHAR2(20) CHECK (DNAME IN ('Accounting', 'Sales', 'Research', 'Operations')),
+    LOC VARCHAR2(100)
+);
+
+
+-- Creating the EMP table
+CREATE TABLE EMP (
+    EMPNO INT PRIMARY KEY CHECK (EMPNO BETWEEN 7000 AND 8000),
+    ENAME VARCHAR(10),
+    JOB VARCHAR(10) CHECK (JOB IN ('Clerk', 'Salesman', 'Manager', 'Analyst', 'President')),
+    MGR INT,
+    HIREDATE DATE,
+    SAL DECIMAL(10, 2),
+    COMM DECIMAL(10, 2) DEFAULT 0 CHECK (COMM < 1500),
+    DEPTNO CHAR(4),
+    FOREIGN KEY (DEPTNO) REFERENCES DEPT(DEPTNO),
+    FOREIGN KEY (MGR) REFERENCES EMP(EMPNO)
+);
+
+
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D1', 'Accounting', 'New York');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D2', 'Sales', 'Los Angeles');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D3', 'Research', 'Chicago');
+INSERT INTO DEPT (DEPTNO, DNAME, LOC) VALUES ('D4', 'Operations', 'San Francisco');
+
+-- Now insert values into EMP table
+INSERT INTO EMP (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO) VALUES
+(7001, 'John Doe', 'Manager', NULL, DATE '2018-01-10', 5000.00, 200.00, 'D1'), 
+(7002, 'Jane Smith', 'Analyst', 7001, DATE '2019-03-15', 4000.00, 150.00, 'D1'),
+(7003, 'Jim Brown', 'Clerk', 7002, DATE '2020-06-23', 2500.00, 0.00, 'D1'),
+(7004, 'Alice J.', 'Salesman', 7001, DATE '2021-07-30', 3000.00, 500.00, 'D2'),
+(7005, 'Bob Davis', 'Clerk', NULL, DATE '2020-09-12', 2200.00, 0.00, 'D2'),
+(7006, 'Carol Lee', 'President', NULL, DATE '2019-11-18', 6000.00, 1000.00, 'D3'),
+(7007, 'David W.', 'Clerk', 7006, DATE '2020-02-09', 2300.00, 100.00, 'D3'),
+(7008, 'Emma M.', 'Manager', NULL, DATE '2021-01-01', 4800.00, 200.00, 'D4');
+
+-- Before update
+SELECT * FROM EMP;
+
+
+CREATE OR REPLACE PROCEDURE raise_salary (
+    emp_id IN EMP.EMPNO%TYPE,
+    amt IN EMP.SAL%TYPE
+) IS
+    -- Local variable to store the current salary
+    current_salary EMP.SAL%TYPE;
+
+    -- Custom exception for when employee ID is not found
+    employee_not_found EXCEPTION;
+
+    -- Custom exception for when salary is NULL
+    salary_is_null EXCEPTION;
+
+BEGIN
+    -- Retrieve the current salary of the employee
+    SELECT SAL INTO current_salary
+    FROM EMP
+    WHERE EMPNO = emp_id;
+
+    -- Check if the salary is NULL
+    IF current_salary IS NULL THEN
+        RAISE salary_is_null;
+    END IF;
+
+    -- Update the salary by adding the specified amount
+    UPDATE EMP
+    SET SAL = SAL + amt
+    WHERE EMPNO = emp_id;
+
+    -- Commit the transaction
+    COMMIT;
+
+    -- Output message for success
+    DBMS_OUTPUT.PUT_LINE('Salary updated successfully for employee ' || emp_id);
+
+-- Exception handling block
+EXCEPTION
+    -- Handle case where employee ID is not found
+    WHEN NO_DATA_FOUND THEN
+        RAISE employee_not_found;
+
+    -- Handle custom exception for null salary
+    WHEN salary_is_null THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Salary is NULL for employee ' || emp_id);
+
+    -- Custom error message for employee not found
+    WHEN employee_not_found THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Employee with ID ' || emp_id || ' not found.');
+
+    -- Handle any other exceptions
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+        ROLLBACK;
+END raise_salary;
+/
+
+BEGIN
+    raise_salary(7001, 500);
+END;
+/
+
+-- After updated
+SELECT * FROM EMP;
+
+
+output:_____________________________________________________________________________
+
+     EMPNO ENAME      JOB		MGR HIREDATE	     SAL       COMM DEPT
+---------- ---------- ---------- ---------- --------- ---------- ---------- ----
+      7001 John Doe   Manager		    10-JAN-18	    5000	200 D1
+      7002 Jane Smith Analyst	       7001 15-MAR-19	    4000	150 D1
+      7003 Jim Brown  Clerk	       7002 23-JUN-20	    2500	  0 D1
+      7004 Alice J.   Salesman	       7001 30-JUL-21	    3000	500 D2
+      7005 Bob Davis  Clerk		    12-SEP-20	    2200	  0 D2
+      7006 Carol Lee  President 	    18-NOV-19	    6000       1000 D3
+      7007 David W.   Clerk	       7006 09-FEB-20	    2300	100 D3
+      7008 Emma M.    Manager		    01-JAN-21	    4800	200 D4
+Salary updated successfully for employee 7001
+
+     EMPNO ENAME      JOB		MGR HIREDATE	     SAL       COMM DEPT
+---------- ---------- ---------- ---------- --------- ---------- ---------- ----
+      7001 John Doe   Manager		    10-JAN-18	    5500	200 D1
+      7002 Jane Smith Analyst	       7001 15-MAR-19	    4000	150 D1
+      7003 Jim Brown  Clerk	       7002 23-JUN-20	    2500	  0 D1
+      7004 Alice J.   Salesman	       7001 30-JUL-21	    3000	500 D2
+      7005 Bob Davis  Clerk		    12-SEP-20	    2200	  0 D2
+      7006 Carol Lee  President 	    18-NOV-19	    6000       1000 D3
+      7007 David W.   Clerk	       7006 09-FEB-20	    2300	100 D3
+      7008 Emma M.    Manager		    01-JAN-21	    4800	200 D4
+
+
